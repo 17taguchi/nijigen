@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@/lib/supabase/server'
+import { createServerClient, createAuthClient } from '@/lib/supabase/server'
 import { generateShortCode } from '@/lib/utils'
 
+async function getUser() {
+  const supabase = await createAuthClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  return user
+}
+
 export async function GET() {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const supabase = createServerClient()
   const { data, error } = await supabase
     .from('codes')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -14,6 +24,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const user = await getUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const body = await req.json()
   const { name, memo, original_url, notification_enabled, notification_email } = body
 
@@ -26,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('codes')
-    .insert({ name, memo, original_url, short_code, notification_enabled, notification_email })
+    .insert({ name, memo, original_url, short_code, notification_enabled, notification_email, user_id: user.id })
     .select()
     .single()
 
