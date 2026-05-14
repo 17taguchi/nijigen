@@ -31,11 +31,20 @@ const FEATURES = [
 
 export default function LoginPage() {
   const router = useRouter()
+  const [tab, setTab] = useState<'login' | 'signup'>('login')
   const [form, setForm] = useState({ email: '', password: '' })
+  const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  function switchTab(next: 'login' | 'signup') {
+    setTab(next)
+    setError('')
+    setForm({ email: '', password: '' })
+    setAgreed(false)
+  }
+
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -46,6 +55,32 @@ export default function LoginPage() {
     })
     if (error) {
       setError('メールアドレスまたはパスワードが正しくありません')
+      setLoading(false)
+    } else {
+      router.push('/')
+      router.refresh()
+    }
+  }
+
+  async function handleSignup(e: React.FormEvent) {
+    e.preventDefault()
+    setError('')
+    if (form.password.length < 8) {
+      setError('パスワードは8文字以上で設定してください')
+      return
+    }
+    if (!agreed) {
+      setError('利用規約とプライバシーポリシーに同意してください')
+      return
+    }
+    setLoading(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.signUp({
+      email: form.email,
+      password: form.password,
+    })
+    if (error) {
+      setError(error.message)
       setLoading(false)
     } else {
       router.push('/')
@@ -69,10 +104,33 @@ export default function LoginPage() {
         </div>
 
         <div className="max-w-sm mx-auto w-full">
-          {/* ログインフォーム */}
-          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-            <h2 className="font-semibold text-gray-900">ログイン</h2>
+          {/* タブ */}
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
+            <button
+              type="button"
+              onClick={() => switchTab('login')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                tab === 'login' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              ログイン
+            </button>
+            <button
+              type="button"
+              onClick={() => switchTab('signup')}
+              className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                tab === 'signup' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              新規登録
+            </button>
+          </div>
 
+          {/* フォーム */}
+          <form
+            onSubmit={tab === 'login' ? handleLogin : handleSignup}
+            className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4"
+          >
             {error && (
               <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
                 {error}
@@ -92,7 +150,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                パスワード
+                {tab === 'signup' && <span className="text-gray-400 font-normal">（8文字以上）</span>}
+              </label>
               <input
                 type="password"
                 value={form.password}
@@ -103,20 +164,32 @@ export default function LoginPage() {
               />
             </div>
 
+            {tab === 'signup' && (
+              <label className="flex items-start gap-2.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <span className="text-sm text-gray-600">
+                  <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">利用規約</Link>
+                  {' '}および{' '}
+                  <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">プライバシーポリシー</Link>
+                  に同意します
+                </span>
+              </label>
+            )}
+
             <button
               type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+              disabled={loading || (tab === 'signup' && !agreed)}
+              className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
             >
               {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-              ログイン
+              {tab === 'login' ? 'ログイン' : 'アカウントを作成'}
             </button>
           </form>
-
-          <p className="text-center text-sm text-gray-500 mt-4">
-            アカウントをお持ちでない方は{' '}
-            <Link href="/signup" className="text-blue-600 hover:underline">新規登録</Link>
-          </p>
         </div>
 
         {/* 特徴 */}
