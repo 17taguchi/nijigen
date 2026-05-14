@@ -52,6 +52,7 @@ export default function CodeDetailPage() {
   const [editing, setEditing] = useState(false)
   const [editForm, setEditForm] = useState({ name: '', memo: '' })
   const [saving, setSaving] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
   const [chartType, setChartType] = useState<ChartType>('daily')
   const [qrColor, setQrColor] = useState('#000000')
@@ -157,6 +158,14 @@ export default function CodeDetailPage() {
     })
   }, [])
 
+  const refreshScans = useCallback(async () => {
+    setRefreshing(true)
+    const res = await fetch(`/api/codes/${id}/scans`)
+    const data: Scan[] = await res.json()
+    setScans(data)
+    setRefreshing(false)
+  }, [id])
+
   useEffect(() => {
     async function load() {
       const [codeRes, scansRes] = await Promise.all([
@@ -244,6 +253,22 @@ export default function CodeDetailPage() {
             {code.memo && <p className="text-gray-500 mt-0.5">{code.memo}</p>}
           </div>
           <div className="flex gap-2 flex-shrink-0">
+            {activeTab === 'analytics' && (
+              <button
+                onClick={refreshScans}
+                disabled={refreshing}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60 transition-colors"
+                title="最新データに更新"
+              >
+                <svg
+                  className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {refreshing ? '更新中...' : '最新データに更新'}
+              </button>
+            )}
             <button
               onClick={() => setActiveTab(activeTab === 'settings' ? 'analytics' : 'settings')}
               className="px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
