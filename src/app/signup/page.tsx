@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/browser'
 
 export default function SignupPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ email: '', password: '', confirm: '' })
+  const [form, setForm] = useState({ email: '', password: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -15,10 +15,6 @@ export default function SignupPage() {
     e.preventDefault()
     setError('')
 
-    if (form.password !== form.confirm) {
-      setError('パスワードが一致しません')
-      return
-    }
     if (form.password.length < 8) {
       setError('パスワードは8文字以上で設定してください')
       return
@@ -73,26 +69,13 @@ export default function SignupPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">パスワード <span className="text-gray-400 font-normal">（8文字以上）</span></label>
             <input
               type="password"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               required
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="8文字以上"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">パスワード（確認）</label>
-            <input
-              type="password"
-              value={form.confirm}
-              onChange={(e) => setForm({ ...form, confirm: e.target.value })}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="••••••••"
             />
           </div>
 
