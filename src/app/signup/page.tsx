@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/browser'
 export default function SignupPage() {
   const router = useRouter()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [agreed, setAgreed] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -17,6 +18,10 @@ export default function SignupPage() {
 
     if (form.password.length < 8) {
       setError('パスワードは8文字以上で設定してください')
+      return
+    }
+    if (!agreed) {
+      setError('利用規約とプライバシーポリシーに同意してください')
       return
     }
 
@@ -37,7 +42,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -79,10 +84,25 @@ export default function SignupPage() {
             />
           </div>
 
+          <label className="flex items-start gap-2.5 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(e) => setAgreed(e.target.checked)}
+              className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-sm text-gray-600">
+              <Link href="/terms" target="_blank" className="text-blue-600 hover:underline">利用規約</Link>
+              {' '}および{' '}
+              <Link href="/privacy" target="_blank" className="text-blue-600 hover:underline">プライバシーポリシー</Link>
+              に同意します
+            </span>
+          </label>
+
           <button
             type="submit"
-            disabled={loading}
-            className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+            disabled={loading || !agreed}
+            className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors flex items-center justify-center gap-2"
           >
             {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
             アカウントを作成
@@ -94,6 +114,12 @@ export default function SignupPage() {
           <Link href="/login" className="text-blue-600 hover:underline">ログイン</Link>
         </p>
       </div>
+
+      <footer className="mt-8 text-center text-xs text-gray-400 space-x-4">
+        <Link href="/terms" className="hover:text-gray-600">利用規約</Link>
+        <Link href="/privacy" className="hover:text-gray-600">プライバシーポリシー</Link>
+        <span>© 株式会社ジュウナナワーク</span>
+      </footer>
     </div>
   )
 }

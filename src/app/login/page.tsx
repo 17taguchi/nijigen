@@ -30,7 +30,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -88,6 +88,12 @@ export default function LoginPage() {
           <Link href="/signup" className="text-blue-600 hover:underline">新規登録</Link>
         </p>
       </div>
+
+      <footer className="mt-8 text-center text-xs text-gray-400 space-x-4">
+        <Link href="/terms" className="hover:text-gray-600">利用規約</Link>
+        <Link href="/privacy" className="hover:text-gray-600">プライバシーポリシー</Link>
+        <span>© 株式会社ジュウナナワーク</span>
+      </footer>
     </div>
   )
 }
