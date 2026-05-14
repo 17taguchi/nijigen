@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 二次元コード管理ツール
 
-## Getting Started
+チラシ配布の効果測定ができる二次元コード管理ツール。URLを入力すると二次元コードが生成され、読み込み状況をアナリティクスで確認できます。
 
-First, run the development server:
+## セットアップ
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### 1. Supabase プロジェクトの作成
+
+1. [Supabase](https://supabase.com) でアカウント作成・プロジェクト作成
+2. `supabase/schema.sql` の内容を Supabase の SQL Editor で実行
+3. Project Settings > API から以下の値を取得：
+   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
+   - `anon / public key` → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `service_role key` → `SUPABASE_SERVICE_ROLE_KEY`
+
+### 2. Resend API キーの取得
+
+1. [Resend](https://resend.com) でアカウント作成
+2. API Keys から API キーを発行
+3. Domains でドメインを追加・認証（`src/lib/email.ts` の `from` アドレスを更新）
+
+### 3. 環境変数の設定
+
+`.env.local` を編集：
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+NEXT_PUBLIC_APP_URL=https://yourdomain.com
+RESEND_API_KEY=re_...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 4. 起動
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 機能
 
-## Learn More
+- **二次元コード生成** — URLを入力してコードを生成、PNG でダウンロード可能
+- **アナリティクス** — 日別・時間帯別の読み込み数グラフ、エリア別集計
+- **メール通知** — 読み込み時にメールで通知（Resend 使用）
+- **短縮URL** — 各コードにユニークな短縮URLを自動生成
 
-To learn more about Next.js, take a look at the following resources:
+## 仕組み
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+ユーザーが二次元コードを読み込む
+  → /r/{shortCode} にアクセス
+  → スキャン情報を Supabase に記録
+  → （通知ONの場合）Resend でメール送信
+  → 元のURLにリダイレクト
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 技術スタック
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Next.js 15 (App Router)
+- TypeScript
+- Tailwind CSS
+- Supabase (PostgreSQL)
+- Resend (メール送信)
+- Recharts (グラフ)
+- qrcode (二次元コード生成)
