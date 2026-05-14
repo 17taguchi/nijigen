@@ -25,7 +25,7 @@ const FEATURES = [
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
     ),
     title: 'エリア分析',
-    desc: 'IPアドレスから読み込みエリアを推定。どの地域からのアクセスが多いか把握できます。',
+    desc: 'IPアドレスから読み込みエリアを推定表示します。都道府県レベルの参考値としてご活用ください（市区町村レベルの精度は保証されません）。',
   },
 ]
 
@@ -68,74 +68,72 @@ export default function LoginPage() {
           <p className="text-gray-500 text-sm mt-2">URLを二次元コードに変換して配布するだけ。読み込み状況をリアルタイムで把握できます。</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          {/* 特徴 */}
-          <div className="space-y-4">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex gap-4">
-                <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    {f.icon}
-                  </svg>
-                </div>
-                <div>
-                  <p className="font-semibold text-gray-900 text-sm">{f.title}</p>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed">{f.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-
+        <div className="max-w-sm mx-auto w-full">
           {/* ログインフォーム */}
-          <div>
-            <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
-              <h2 className="font-semibold text-gray-900">ログイン</h2>
+          <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-4">
+            <h2 className="font-semibold text-gray-900">ログイン</h2>
 
-              {error && (
-                <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
-                  {error}
-                </div>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="example@email.com"
-                />
+            {error && (
+              <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                {error}
               </div>
+            )}
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
-                <input
-                  type="password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="••••••••"
-                />
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">メールアドレス</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="example@email.com"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">パスワード</label>
+              <input
+                type="password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
+            >
+              {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
+              ログイン
+            </button>
+          </form>
+
+          <p className="text-center text-sm text-gray-500 mt-4">
+            アカウントをお持ちでない方は{' '}
+            <Link href="/signup" className="text-blue-600 hover:underline">新規登録</Link>
+          </p>
+        </div>
+
+        {/* 特徴 */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-10">
+          {FEATURES.map((f) => (
+            <div key={f.title} className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex gap-4">
+              <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {f.icon}
+                </svg>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-60 transition-colors flex items-center justify-center gap-2"
-              >
-                {loading && <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />}
-                ログイン
-              </button>
-            </form>
-
-            <p className="text-center text-sm text-gray-500 mt-4">
-              アカウントをお持ちでない方は{' '}
-              <Link href="/signup" className="text-blue-600 hover:underline">新規登録</Link>
-            </p>
-          </div>
+              <div>
+                <p className="font-semibold text-gray-900 text-sm">{f.title}</p>
+                <p className="text-xs text-gray-500 mt-1 leading-relaxed">{f.desc}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
