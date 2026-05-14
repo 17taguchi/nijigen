@@ -30,7 +30,7 @@ export default function CodeDetailPage() {
   const [scans, setScans] = useState<Scan[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', memo: '', notification_enabled: false, notification_email: '' })
+  const [editForm, setEditForm] = useState({ name: '', memo: '' })
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
   const [qrColor, setQrColor] = useState('#000000')
@@ -58,8 +58,6 @@ export default function CodeDetailPage() {
       setEditForm({
         name: codeData.name,
         memo: codeData.memo ?? '',
-        notification_enabled: codeData.notification_enabled,
-        notification_email: codeData.notification_email ?? '',
       })
       setLoading(false)
       setTimeout(() => generateQR(getShortUrl(codeData.short_code), '#000000'), 100)
@@ -374,40 +372,6 @@ export default function CodeDetailPage() {
                   </div>
                 </div>
 
-                <div className="p-6 space-y-4">
-                  <h2 className="font-semibold text-gray-900">通知設定</h2>
-
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <div className="relative">
-                      <input
-                        type="checkbox"
-                        checked={editForm.notification_enabled}
-                        onChange={(e) => {
-                          setEditForm({ ...editForm, notification_enabled: e.target.checked })
-                          setEditing(true)
-                        }}
-                        className="sr-only"
-                      />
-                      <div className={`w-10 h-6 rounded-full transition-colors ${editForm.notification_enabled ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                        <div className={`w-4 h-4 bg-white rounded-full shadow mt-1 transition-transform ${editForm.notification_enabled ? 'translate-x-5' : 'translate-x-1'}`} />
-                      </div>
-                    </div>
-                    <span className="text-sm font-medium text-gray-700">メール通知</span>
-                  </label>
-
-                  {editForm.notification_enabled && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">通知先メールアドレス</label>
-                      <input
-                        type="email"
-                        value={editForm.notification_email}
-                        onChange={(e) => { setEditForm({ ...editForm, notification_email: e.target.value }); setEditing(true) }}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  )}
-                </div>
-
                 <div className="px-6 py-4 flex items-center justify-between">
                   <button
                     onClick={() => setEditing(true)}
@@ -418,7 +382,7 @@ export default function CodeDetailPage() {
                   {editing && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '', notification_enabled: code.notification_enabled, notification_email: code.notification_email ?? '' }) }}
+                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '' }) }}
                         className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                       >
                         キャンセル

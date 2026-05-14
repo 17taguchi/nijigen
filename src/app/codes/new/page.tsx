@@ -6,13 +6,7 @@ import Navbar from '@/components/Navbar'
 
 export default function NewCodePage() {
   const router = useRouter()
-  const [form, setForm] = useState({
-    name: '',
-    memo: '',
-    original_url: '',
-    notification_enabled: false,
-    notification_email: '',
-  })
+  const [form, setForm] = useState({ name: '', memo: '', original_url: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -27,9 +21,6 @@ export default function NewCodePage() {
       } catch {
         errs.original_url = '有効なURLを入力してください（例：https://example.com）'
       }
-    }
-    if (form.notification_enabled && !form.notification_email.trim()) {
-      errs.notification_email = '通知先メールアドレスを入力してください'
     }
     return errs
   }
@@ -65,10 +56,7 @@ export default function NewCodePage() {
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
-          {/* 基本情報 */}
           <div className="p-6 space-y-5">
-            <h2 className="font-medium text-gray-900">基本情報</h2>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 コード名 <span className="text-red-500">*</span>
@@ -114,50 +102,6 @@ export default function NewCodePage() {
             </div>
           </div>
 
-          {/* 通知設定 */}
-          <div className="p-6 space-y-4">
-            <h2 className="font-medium text-gray-900">通知設定</h2>
-
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative">
-                <input
-                  type="checkbox"
-                  checked={form.notification_enabled}
-                  onChange={(e) => setForm({ ...form, notification_enabled: e.target.checked })}
-                  className="sr-only"
-                />
-                <div className={`w-10 h-6 rounded-full transition-colors ${form.notification_enabled ? 'bg-blue-600' : 'bg-gray-300'}`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow mt-1 transition-transform ${form.notification_enabled ? 'translate-x-5' : 'translate-x-1'}`} />
-                </div>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-gray-700">読み込み時にメール通知を受け取る</p>
-                <p className="text-xs text-gray-400">二次元コードが読み込まれるたびにメールが届きます</p>
-              </div>
-            </label>
-
-            {form.notification_enabled && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  通知先メールアドレス <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  value={form.notification_email}
-                  onChange={(e) => setForm({ ...form, notification_email: e.target.value })}
-                  placeholder="example@email.com"
-                  className={`w-full px-3 py-2 border rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-shadow ${
-                    errors.notification_email ? 'border-red-400' : 'border-gray-300'
-                  }`}
-                />
-                {errors.notification_email && (
-                  <p className="text-xs text-red-500 mt-1">{errors.notification_email}</p>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* アクション */}
           <div className="px-6 py-4 flex items-center justify-end gap-3">
             <button
               type="button"

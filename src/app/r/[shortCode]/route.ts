@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase/server'
-import { sendScanNotification } from '@/lib/email'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ shortCode: string }> }) {
   const { shortCode } = await params
@@ -8,7 +7,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ shor
 
   const { data: code, error } = await supabase
     .from('codes')
-    .select('*')
+    .select('id, original_url')
     .eq('short_code', shortCode)
     .single()
 
@@ -22,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ shor
     req.headers.get('x-real-ip') ||
     null
 
-  // IP位置情報を取得（ip-api.com 無料API）
+  // IP位置情報を取得
   let country: string | null = null
   let region: string | null = null
   let city: string | null = null
@@ -52,23 +51,6 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ shor
     region,
     city,
   })
-
-  // メール通知
-  if (code.notification_enabled && code.notification_email) {
-    const { count } = await supabase
-      .from('scans')
-      .select('*', { count: 'exact', head: true })
-      .eq('code_id', code.id)
-
-    sendScanNotification({
-      to: code.notification_email,
-      codeName: code.name,
-      originalUrl: code.original_url,
-      scanCount: (count ?? 0) + 1,
-      city,
-      country,
-    }).catch(() => {})
-  }
 
   return NextResponse.redirect(code.original_url, 302)
 }
