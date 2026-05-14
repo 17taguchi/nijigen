@@ -13,6 +13,14 @@ import Navbar from '@/components/Navbar'
 import { Code, Scan } from '@/lib/supabase/types'
 import { getShortUrl, formatDateTime } from '@/lib/utils'
 
+const PRESET_COLORS = [
+  { label: '黒', value: '#000000' },
+  { label: '紺', value: '#1e3a8a' },
+  { label: '赤', value: '#dc2626' },
+  { label: '緑', value: '#16a34a' },
+  { label: '紫', value: '#7c3aed' },
+]
+
 export default function CodeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -25,13 +33,14 @@ export default function CodeDetailPage() {
   const [editForm, setEditForm] = useState({ name: '', memo: '', notification_enabled: false, notification_email: '' })
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
+  const [qrColor, setQrColor] = useState('#000000')
 
-  const generateQR = useCallback(async (url: string) => {
+  const generateQR = useCallback(async (url: string, color: string) => {
     if (!canvasRef.current) return
     await QRCode.toCanvas(canvasRef.current, url, {
       width: 280,
       margin: 2,
-      color: { dark: '#1e3a8a', light: '#ffffff' },
+      color: { dark: color, light: '#ffffff' },
     })
   }, [])
 
@@ -53,10 +62,15 @@ export default function CodeDetailPage() {
         notification_email: codeData.notification_email ?? '',
       })
       setLoading(false)
-      setTimeout(() => generateQR(getShortUrl(codeData.short_code)), 100)
+      setTimeout(() => generateQR(getShortUrl(codeData.short_code), '#000000'), 100)
     }
     load()
   }, [id, router, generateQR])
+
+  useEffect(() => {
+    if (!code) return
+    generateQR(getShortUrl(code.short_code), qrColor)
+  }, [qrColor, code, generateQR])
 
   async function handleSave() {
     if (!code) return
@@ -166,6 +180,36 @@ export default function CodeDetailPage() {
           <div className="lg:col-span-1 space-y-4">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 flex flex-col items-center">
               <canvas ref={canvasRef} className="rounded-lg" />
+
+              {/* カラーピッカー */}
+              <div className="mt-4 w-full">
+                <p className="text-xs text-gray-500 mb-2">コードの色</p>
+                <div className="flex items-center gap-2">
+                  {PRESET_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      onClick={() => setQrColor(c.value)}
+                      title={c.label}
+                      className={`w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 ${
+                        qrColor === c.value ? 'border-gray-400 scale-110' : 'border-transparent'
+                      }`}
+                      style={{ backgroundColor: c.value }}
+                    />
+                  ))}
+                  <label className="w-7 h-7 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-400 transition-colors overflow-hidden" title="カスタム色">
+                    <input
+                      type="color"
+                      value={qrColor}
+                      onChange={(e) => setQrColor(e.target.value)}
+                      className="opacity-0 absolute w-px h-px"
+                    />
+                    <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                  </label>
+                </div>
+              </div>
+
               <button
                 onClick={downloadQR}
                 className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
@@ -236,7 +280,9 @@ export default function CodeDetailPage() {
                 {/* エリア */}
                 {areaData.length > 0 && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                    <h3 className="font-semibold text-gray-900 mb-4">読み込みエリア</h3>
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="font-semibold text-gray-900">読み込みエリア</h3>
+                    </div>
                     <div className="space-y-2">
                       {areaData.map(({ area, count }) => (
                         <div key={area} className="flex items-center gap-3">
@@ -251,6 +297,9 @@ export default function CodeDetailPage() {
                         </div>
                       ))}
                     </div>
+                    <p className="text-xs text-gray-400 mt-3">
+                      ※ IPアドレスからの推定のため、市区町村レベルの精度は保証されません
+                    </p>
                   </div>
                 )}
 
