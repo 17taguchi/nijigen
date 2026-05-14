@@ -52,7 +52,7 @@ export default function DashboardPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
         {/* ヘッダー統計 */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
             <p className="text-sm text-gray-500">登録コード数</p>
             <p className="text-3xl font-bold text-gray-900 mt-1">{codes.length}</p>
@@ -61,12 +61,6 @@ export default function DashboardPage() {
             <p className="text-sm text-gray-500">累計読み込み数</p>
             <p className="text-3xl font-bold text-blue-600 mt-1">
               {Object.values(scanCounts).reduce((a, b) => a + b, 0)}
-            </p>
-          </div>
-          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm col-span-2 sm:col-span-1">
-            <p className="text-sm text-gray-500">通知設定済み</p>
-            <p className="text-3xl font-bold text-green-600 mt-1">
-              {codes.filter((c) => c.notification_enabled).length}
             </p>
           </div>
         </div>
