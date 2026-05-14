@@ -115,11 +115,6 @@ export default function SignupPage() {
         </p>
       </div>
 
-      <footer className="mt-8 text-center text-xs text-gray-400 space-x-4">
-        <Link href="/terms" className="hover:text-gray-600">利用規約</Link>
-        <Link href="/privacy" className="hover:text-gray-600">プライバシーポリシー</Link>
-        <span>© 株式会社ジュウナナワーク</span>
-      </footer>
     </div>
   )
 }
