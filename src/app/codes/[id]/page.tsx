@@ -7,7 +7,7 @@ import QRCode from 'qrcode'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line
 } from 'recharts'
-import { format, subDays, eachDayOfInterval, eachHourOfInterval, startOfDay, endOfDay } from 'date-fns'
+import { format, subDays, subMonths, eachDayOfInterval, eachMonthOfInterval, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Navbar from '@/components/Navbar'
 import { Code, Scan } from '@/lib/supabase/types'
@@ -33,6 +33,7 @@ export default function CodeDetailPage() {
   const [editForm, setEditForm] = useState({ name: '', memo: '' })
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
+  const [chartType, setChartType] = useState<'daily' | 'monthly' | 'hourly'>('daily')
   const [qrColor, setQrColor] = useState('#000000')
 
   const generateQR = useCallback(async (url: string, color: string) => {
@@ -98,7 +99,7 @@ export default function CodeDetailPage() {
   const dailyData = (() => {
     const days = eachDayOfInterval({ start: subDays(new Date(), 13), end: new Date() })
     return days.map((day) => ({
-      date: format(day, 'M/d', { locale: ja }),
+      label: format(day, 'M/d', { locale: ja }),
       count: scans.filter((s) => {
         const d = new Date(s.scanned_at)
         return d >= startOfDay(day) && d <= endOfDay(day)
@@ -106,18 +107,25 @@ export default function CodeDetailPage() {
     }))
   })()
 
+  const monthlyData = (() => {
+    const months = eachMonthOfInterval({ start: subMonths(new Date(), 11), end: new Date() })
+    return months.map((month) => ({
+      label: format(month, 'M月', { locale: ja }),
+      count: scans.filter((s) => {
+        const d = new Date(s.scanned_at)
+        return d >= startOfMonth(month) && d <= endOfMonth(month)
+      }).length,
+    }))
+  })()
+
   const hourlyData = (() => {
-    const hours = eachHourOfInterval({
-      start: new Date(new Date().setHours(0, 0, 0, 0)),
-      end: new Date(new Date().setHours(23, 59, 59, 999)),
-    })
-    const todayScans = scans.filter((s) => {
-      const d = new Date(s.scanned_at)
-      return d >= startOfDay(new Date()) && d <= endOfDay(new Date())
-    })
-    return hours.map((h) => ({
-      hour: `${h.getHours()}時`,
-      count: todayScans.filter((s) => new Date(s.scanned_at).getHours() === h.getHours()).length,
+    const daySet = new Set(scans.map((s) => format(new Date(s.scanned_at), 'yyyy-MM-dd')))
+    const totalDays = Math.max(daySet.size, 1)
+    return Array.from({ length: 24 }, (_, h) => ({
+      label: `${h}時`,
+      avg: Math.round(
+        (scans.filter((s) => new Date(s.scanned_at).getHours() === h).length / totalDays) * 10
+      ) / 10,
     }))
   })()
 
@@ -247,31 +255,46 @@ export default function CodeDetailPage() {
           <div className="lg:col-span-2 space-y-4">
             {activeTab === 'analytics' ? (
               <>
-                {/* 日別グラフ */}
+                {/* グラフ */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                  <h3 className="font-semibold text-gray-900 mb-4">日別読み込み数（直近14日）</h3>
+                  <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
+                    <h3 className="font-semibold text-gray-900">
+                      {chartType === 'daily' && '日別読み込み数（直近14日）'}
+                      {chartType === 'monthly' && '月別読み込み数（直近12ヶ月）'}
+                      {chartType === 'hourly' && '時間帯別平均読み込み数（全期間）'}
+                    </h3>
+                    <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+                      {(['daily', 'monthly', 'hourly'] as const).map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => setChartType(t)}
+                          className={`px-3 py-1.5 rounded-md transition-colors ${
+                            chartType === t ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          {t === 'daily' ? '日別' : t === 'monthly' ? '月別' : '時間帯'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <ResponsiveContainer width="100%" height={200}>
-                    <BarChart data={dailyData} barSize={16}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip />
-                      <Bar dataKey="count" name="読み込み数" fill="#3b82f6" radius={[3, 3, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-
-                {/* 時間帯グラフ */}
-                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                  <h3 className="font-semibold text-gray-900 mb-4">本日の時間帯別読み込み</h3>
-                  <ResponsiveContainer width="100%" height={180}>
-                    <LineChart data={hourlyData}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                      <XAxis dataKey="hour" tick={{ fontSize: 10 }} interval={2} />
-                      <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="count" name="読み込み数" stroke="#3b82f6" strokeWidth={2} dot={false} />
-                    </LineChart>
+                    {chartType === 'hourly' ? (
+                      <LineChart data={hourlyData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={2} />
+                        <YAxis tick={{ fontSize: 11 }} />
+                        <Tooltip formatter={(v) => [`${v}回`, '平均読み込み数']} />
+                        <Line type="monotone" dataKey="avg" name="平均" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                      </LineChart>
+                    ) : (
+                      <BarChart data={chartType === 'daily' ? dailyData : monthlyData} barSize={16}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
+                        <Tooltip formatter={(v) => [`${v}回`, '読み込み数']} />
+                        <Bar dataKey="count" name="読み込み数" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                      </BarChart>
+                    )}
                   </ResponsiveContainer>
                 </div>
 
