@@ -82,9 +82,6 @@ export default function TermsPage() {
           </div>
         </div>
 
-        <div className="text-center mt-6">
-          <Link href="/login" className="text-sm text-blue-600 hover:underline">← ログインページに戻る</Link>
-        </div>
       </main>
     </div>
   )
