@@ -1,7 +1,5 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function sendScanNotification({
   to,
   codeName,
@@ -17,6 +15,9 @@ export async function sendScanNotification({
   city?: string | null
   country?: string | null
 }) {
+  if (!process.env.RESEND_API_KEY) return
+
+  const resend = new Resend(process.env.RESEND_API_KEY)
   const location = [city, country].filter(Boolean).join(', ') || '不明'
 
   await resend.emails.send({
