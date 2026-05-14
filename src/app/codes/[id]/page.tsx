@@ -5,9 +5,14 @@ import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import QRCode from 'qrcode'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, Legend
 } from 'recharts'
-import { format, subDays, subMonths, eachDayOfInterval, eachMonthOfInterval, startOfDay, endOfDay, startOfMonth, endOfMonth } from 'date-fns'
+import {
+  format, subDays, subMonths, subYears, addDays, addMonths,
+  eachDayOfInterval, eachMonthOfInterval,
+  startOfDay, endOfDay, startOfMonth, endOfMonth,
+  differenceInDays,
+} from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Navbar from '@/components/Navbar'
 import { Code, Scan } from '@/lib/supabase/types'
@@ -21,6 +26,21 @@ const PRESET_COLORS = [
   { label: '紫', value: '#7c3aed' },
 ]
 
+type Preset = '7d' | '14d' | '30d' | '90d' | '1y' | 'custom'
+type CompareMode = 'none' | 'prev' | 'lastyear'
+type ChartType = 'daily' | 'monthly' | 'hourly'
+
+function toDateString(d: Date) {
+  return format(d, 'yyyy-MM-dd')
+}
+
+function scansInRange(scans: Scan[], start: Date, end: Date) {
+  return scans.filter((s) => {
+    const d = new Date(s.scanned_at)
+    return d >= startOfDay(start) && d <= endOfDay(end)
+  })
+}
+
 export default function CodeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -33,8 +53,100 @@ export default function CodeDetailPage() {
   const [editForm, setEditForm] = useState({ name: '', memo: '' })
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
-  const [chartType, setChartType] = useState<'daily' | 'monthly' | 'hourly'>('daily')
+  const [chartType, setChartType] = useState<ChartType>('daily')
   const [qrColor, setQrColor] = useState('#000000')
+
+  // 期間選択
+  const [preset, setPreset] = useState<Preset>('14d')
+  const [rangeStart, setRangeStart] = useState<Date>(subDays(new Date(), 13))
+  const [rangeEnd, setRangeEnd] = useState<Date>(new Date())
+  const [customStart, setCustomStart] = useState(toDateString(subDays(new Date(), 13)))
+  const [customEnd, setCustomEnd] = useState(toDateString(new Date()))
+  const [compareMode, setCompareMode] = useState<CompareMode>('none')
+
+  function applyPreset(p: Preset) {
+    setPreset(p)
+    const today = new Date()
+    if (p === '7d')   { setRangeStart(subDays(today, 6));   setRangeEnd(today) }
+    if (p === '14d')  { setRangeStart(subDays(today, 13));  setRangeEnd(today) }
+    if (p === '30d')  { setRangeStart(subDays(today, 29));  setRangeEnd(today) }
+    if (p === '90d')  { setRangeStart(subDays(today, 89));  setRangeEnd(today) }
+    if (p === '1y')   { setRangeStart(subDays(today, 364)); setRangeEnd(today) }
+  }
+
+  function applyCustom() {
+    const s = new Date(customStart)
+    const e = new Date(customEnd)
+    if (s <= e) { setRangeStart(s); setRangeEnd(e) }
+  }
+
+  // 比較期間を計算
+  const spanDays = differenceInDays(rangeEnd, rangeStart)
+  const compareStart = compareMode === 'lastyear'
+    ? subYears(rangeStart, 1)
+    : subDays(rangeStart, spanDays + 1)
+  const compareEnd = compareMode === 'lastyear'
+    ? subYears(rangeEnd, 1)
+    : subDays(rangeStart, 1)
+
+  const mainScans = scansInRange(scans, rangeStart, rangeEnd)
+  const cmpScans = compareMode !== 'none' ? scansInRange(scans, compareStart, compareEnd) : []
+
+  // グラフデータ生成
+  const barData = (() => {
+    if (chartType === 'monthly') {
+      const months = eachMonthOfInterval({ start: startOfMonth(rangeStart), end: startOfMonth(rangeEnd) })
+      return months.map((month, i) => {
+        const cmpMonth = compareMode === 'lastyear'
+          ? subYears(month, 1)
+          : addMonths(startOfMonth(compareStart), i)
+        return {
+          label: format(month, 'M月', { locale: ja }),
+          count: scans.filter((s) => { const d = new Date(s.scanned_at); return d >= startOfMonth(month) && d <= endOfMonth(month) }).length,
+          compare: compareMode !== 'none'
+            ? scans.filter((s) => { const d = new Date(s.scanned_at); return d >= startOfMonth(cmpMonth) && d <= endOfMonth(cmpMonth) }).length
+            : 0,
+        }
+      })
+    }
+    const days = eachDayOfInterval({ start: rangeStart, end: rangeEnd })
+    return days.map((day, i) => {
+      const cmpDay = compareMode === 'lastyear' ? subYears(day, 1) : addDays(compareStart, i)
+      return {
+        label: format(day, 'M/d', { locale: ja }),
+        count: scansInRange(scans, day, day).length,
+        compare: compareMode !== 'none' ? scansInRange(scans, cmpDay, cmpDay).length : 0,
+      }
+    })
+  })()
+
+  const lineData = (() => {
+    const mainDays = Math.max(new Set(mainScans.map((s) => format(new Date(s.scanned_at), 'yyyy-MM-dd'))).size, 1)
+    const cmpDays  = Math.max(new Set(cmpScans.map((s) => format(new Date(s.scanned_at), 'yyyy-MM-dd'))).size, 1)
+    return Array.from({ length: 24 }, (_, h) => ({
+      label: `${h}時`,
+      avg: Math.round((mainScans.filter((s) => new Date(s.scanned_at).getHours() === h).length / mainDays) * 10) / 10,
+      compareAvg: compareMode !== 'none'
+        ? Math.round((cmpScans.filter((s) => new Date(s.scanned_at).getHours() === h).length / cmpDays) * 10) / 10
+        : 0,
+    }))
+  })()
+
+  const areaData = (() => {
+    const counts: Record<string, number> = {}
+    mainScans.forEach((s) => {
+      const area = [s.city, s.region, s.country].filter(Boolean).join(' / ') || '不明'
+      counts[area] = (counts[area] ?? 0) + 1
+    })
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([area, count]) => ({ area, count }))
+  })()
+
+  const compareLabel = compareMode === 'lastyear'
+    ? `前年同期 (${format(compareStart, 'M/d')}–${format(compareEnd, 'M/d', { locale: ja })})`
+    : `前の期間 (${format(compareStart, 'M/d')}–${format(compareEnd, 'M/d', { locale: ja })})`
 
   const generateQR = useCallback(async (url: string, color: string) => {
     if (!canvasRef.current) return
@@ -56,10 +168,7 @@ export default function CodeDetailPage() {
       const scansData: Scan[] = await scansRes.json()
       setCode(codeData)
       setScans(scansData)
-      setEditForm({
-        name: codeData.name,
-        memo: codeData.memo ?? '',
-      })
+      setEditForm({ name: codeData.name, memo: codeData.memo ?? '' })
       setLoading(false)
       setTimeout(() => generateQR(getShortUrl(codeData.short_code), '#000000'), 100)
     }
@@ -95,52 +204,6 @@ export default function CodeDetailPage() {
     link.click()
   }
 
-  // グラフデータ生成
-  const dailyData = (() => {
-    const days = eachDayOfInterval({ start: subDays(new Date(), 13), end: new Date() })
-    return days.map((day) => ({
-      label: format(day, 'M/d', { locale: ja }),
-      count: scans.filter((s) => {
-        const d = new Date(s.scanned_at)
-        return d >= startOfDay(day) && d <= endOfDay(day)
-      }).length,
-    }))
-  })()
-
-  const monthlyData = (() => {
-    const months = eachMonthOfInterval({ start: subMonths(new Date(), 11), end: new Date() })
-    return months.map((month) => ({
-      label: format(month, 'M月', { locale: ja }),
-      count: scans.filter((s) => {
-        const d = new Date(s.scanned_at)
-        return d >= startOfMonth(month) && d <= endOfMonth(month)
-      }).length,
-    }))
-  })()
-
-  const hourlyData = (() => {
-    const daySet = new Set(scans.map((s) => format(new Date(s.scanned_at), 'yyyy-MM-dd')))
-    const totalDays = Math.max(daySet.size, 1)
-    return Array.from({ length: 24 }, (_, h) => ({
-      label: `${h}時`,
-      avg: Math.round(
-        (scans.filter((s) => new Date(s.scanned_at).getHours() === h).length / totalDays) * 10
-      ) / 10,
-    }))
-  })()
-
-  const areaData = (() => {
-    const counts: Record<string, number> = {}
-    scans.forEach((s) => {
-      const area = [s.city, s.region, s.country].filter(Boolean).join(' / ') || '不明'
-      counts[area] = (counts[area] ?? 0) + 1
-    })
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 8)
-      .map(([area, count]) => ({ area, count }))
-  })()
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -155,6 +218,15 @@ export default function CodeDetailPage() {
   if (!code) return null
 
   const shortUrl = getShortUrl(code.short_code)
+
+  const PRESETS: { key: Preset; label: string }[] = [
+    { key: '7d', label: '7日' },
+    { key: '14d', label: '14日' },
+    { key: '30d', label: '30日' },
+    { key: '90d', label: '90日' },
+    { key: '1y', label: '1年' },
+    { key: 'custom', label: 'カスタム' },
+  ]
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -245,9 +317,21 @@ export default function CodeDetailPage() {
             </div>
 
             {/* 合計スキャン数 */}
-            <div className="bg-blue-600 rounded-xl p-5 text-white text-center">
+            <div className="bg-blue-600 rounded-xl p-5 text-white">
               <p className="text-sm opacity-80">累計読み込み数</p>
               <p className="text-5xl font-bold mt-1">{scans.length}</p>
+              {compareMode !== 'none' && (
+                <div className="mt-3 pt-3 border-t border-blue-500 flex gap-4 text-sm">
+                  <div>
+                    <p className="opacity-70">選択期間</p>
+                    <p className="font-semibold">{mainScans.length}回</p>
+                  </div>
+                  <div>
+                    <p className="opacity-70">比較期間</p>
+                    <p className="font-semibold">{cmpScans.length}回</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -255,16 +339,83 @@ export default function CodeDetailPage() {
           <div className="lg:col-span-2 space-y-4">
             {activeTab === 'analytics' ? (
               <>
+                {/* 期間選択 */}
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
+                  {/* プリセット */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-500 font-medium">表示期間</span>
+                    <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
+                      {PRESETS.map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => applyPreset(key)}
+                          className={`px-3 py-1.5 rounded-md transition-colors ${
+                            preset === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* カスタム日付 */}
+                  {preset === 'custom' && (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input
+                        type="date"
+                        value={customStart}
+                        onChange={(e) => setCustomStart(e.target.value)}
+                        className="text-sm border border-gray-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <span className="text-gray-400 text-sm">〜</span>
+                      <input
+                        type="date"
+                        value={customEnd}
+                        onChange={(e) => setCustomEnd(e.target.value)}
+                        className="text-sm border border-gray-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        onClick={applyCustom}
+                        className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                      >
+                        適用
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 比較 */}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-500 font-medium">比較</span>
+                    {(['none', 'prev', 'lastyear'] as CompareMode[]).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setCompareMode(m)}
+                        className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                          compareMode === m
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                        }`}
+                      >
+                        {m === 'none' ? 'なし' : m === 'prev' ? '前の期間' : '前年同期'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* グラフ */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
                   <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-                    <h3 className="font-semibold text-gray-900">
-                      {chartType === 'daily' && '日別読み込み数（直近14日）'}
-                      {chartType === 'monthly' && '月別読み込み数（直近12ヶ月）'}
-                      {chartType === 'hourly' && '時間帯別平均読み込み数（全期間）'}
-                    </h3>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">
+                        {chartType === 'daily' ? '日別' : chartType === 'monthly' ? '月別' : '時間帯別平均'}読み込み数
+                      </h3>
+                      {compareMode !== 'none' && (
+                        <p className="text-xs text-gray-400 mt-0.5">灰色：{compareLabel}</p>
+                      )}
+                    </div>
                     <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
-                      {(['daily', 'monthly', 'hourly'] as const).map((t) => (
+                      {(['daily', 'monthly', 'hourly'] as ChartType[]).map((t) => (
                         <button
                           key={t}
                           onClick={() => setChartType(t)}
@@ -277,22 +428,31 @@ export default function CodeDetailPage() {
                       ))}
                     </div>
                   </div>
-                  <ResponsiveContainer width="100%" height={200}>
+
+                  <ResponsiveContainer width="100%" height={220}>
                     {chartType === 'hourly' ? (
-                      <LineChart data={hourlyData}>
+                      <LineChart data={lineData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis dataKey="label" tick={{ fontSize: 10 }} interval={2} />
                         <YAxis tick={{ fontSize: 11 }} />
-                        <Tooltip formatter={(v) => [`${v}回`, '平均読み込み数']} />
-                        <Line type="monotone" dataKey="avg" name="平均" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                        <Tooltip formatter={(v, name) => [`${v}回`, name === 'avg' ? '選択期間' : '比較期間']} />
+                        {compareMode !== 'none' && <Legend formatter={(v) => v === 'avg' ? '選択期間' : '比較期間'} />}
+                        <Line type="monotone" dataKey="avg" stroke="#3b82f6" strokeWidth={2} dot={false} />
+                        {compareMode !== 'none' && (
+                          <Line type="monotone" dataKey="compareAvg" stroke="#d1d5db" strokeWidth={2} dot={false} strokeDasharray="4 2" />
+                        )}
                       </LineChart>
                     ) : (
-                      <BarChart data={chartType === 'daily' ? dailyData : monthlyData} barSize={16}>
+                      <BarChart data={barData} barSize={compareMode !== 'none' ? 10 : 16} barCategoryGap="20%">
                         <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                         <XAxis dataKey="label" tick={{ fontSize: 11 }} />
                         <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
-                        <Tooltip formatter={(v) => [`${v}回`, '読み込み数']} />
-                        <Bar dataKey="count" name="読み込み数" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                        <Tooltip formatter={(v, name) => [`${v}回`, name === 'count' ? '選択期間' : '比較期間']} />
+                        {compareMode !== 'none' && <Legend formatter={(v) => v === 'count' ? '選択期間' : '比較期間'} />}
+                        <Bar dataKey="count" fill="#3b82f6" radius={[3, 3, 0, 0]} />
+                        {compareMode !== 'none' && (
+                          <Bar dataKey="compare" fill="#d1d5db" radius={[3, 3, 0, 0]} />
+                        )}
                       </BarChart>
                     )}
                   </ResponsiveContainer>
@@ -301,9 +461,7 @@ export default function CodeDetailPage() {
                 {/* エリア */}
                 {areaData.length > 0 && (
                   <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-                    <div className="flex items-start justify-between mb-4">
-                      <h3 className="font-semibold text-gray-900">読み込みエリア</h3>
-                    </div>
+                    <h3 className="font-semibold text-gray-900 mb-4">読み込みエリア（選択期間）</h3>
                     <div className="space-y-2">
                       {areaData.map(({ area, count }) => (
                         <div key={area} className="flex items-center gap-3">
@@ -311,7 +469,7 @@ export default function CodeDetailPage() {
                           <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                             <div
                               className="h-full bg-blue-500 rounded-full"
-                              style={{ width: `${(count / scans.length) * 100}%` }}
+                              style={{ width: `${(count / mainScans.length) * 100}%` }}
                             />
                           </div>
                           <span className="text-sm font-medium text-gray-900 w-8 text-right">{count}</span>
