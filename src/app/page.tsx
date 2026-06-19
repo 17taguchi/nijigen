@@ -109,7 +109,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                     {code.memo && <p className="text-sm text-gray-400 truncate">{code.memo}</p>}
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{getShortUrl(code.short_code)}</p>
+                    <p className="hidden sm:block text-xs text-gray-400 mt-0.5 truncate">{getShortUrl(code.short_code)}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-2xl font-bold text-blue-600">{scanCounts[code.id] ?? 0}</p>

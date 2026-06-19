@@ -257,16 +257,16 @@ export default function CodeDetailPage() {
               <button
                 onClick={refreshScans}
                 disabled={refreshing}
-                className="flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60 transition-colors"
+                className="flex items-center gap-1.5 px-2 sm:px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60 transition-colors"
                 title="最新データに更新"
               >
                 <svg
-                  className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`}
+                  className={`w-4 h-4 flex-shrink-0 ${refreshing ? 'animate-spin' : ''}`}
                   fill="none" viewBox="0 0 24 24" stroke="currentColor"
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshing ? '更新中...' : '最新データに更新'}
+                <span className="hidden sm:inline">{refreshing ? '更新中...' : '最新データに更新'}</span>
               </button>
             )}
             <button
@@ -367,20 +367,22 @@ export default function CodeDetailPage() {
                 {/* 期間選択 */}
                 <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 space-y-3">
                   {/* プリセット */}
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-gray-500 font-medium">表示期間</span>
-                    <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium">
-                      {PRESETS.map(({ key, label }) => (
-                        <button
-                          key={key}
-                          onClick={() => applyPreset(key)}
-                          className={`px-3 py-1.5 rounded-md transition-colors ${
-                            preset === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-                          }`}
-                        >
-                          {label}
-                        </button>
-                      ))}
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 font-medium flex-shrink-0">表示期間</span>
+                    <div className="overflow-x-auto scrollbar-none">
+                      <div className="flex bg-gray-100 rounded-lg p-0.5 text-xs font-medium w-max">
+                        {PRESETS.map(({ key, label }) => (
+                          <button
+                            key={key}
+                            onClick={() => applyPreset(key)}
+                            className={`px-3 py-1.5 rounded-md transition-colors whitespace-nowrap ${
+                              preset === key ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
@@ -391,18 +393,18 @@ export default function CodeDetailPage() {
                         type="date"
                         value={customStart}
                         onChange={(e) => setCustomStart(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 min-w-0 text-sm border border-gray-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500"
                       />
-                      <span className="text-gray-400 text-sm">〜</span>
+                      <span className="text-gray-400 text-sm flex-shrink-0">〜</span>
                       <input
                         type="date"
                         value={customEnd}
                         onChange={(e) => setCustomEnd(e.target.value)}
-                        className="text-sm border border-gray-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 min-w-0 text-sm border border-gray-300 rounded-lg px-2 py-1.5 outline-none focus:ring-2 focus:ring-blue-500"
                       />
                       <button
                         onClick={applyCustom}
-                        className="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                        className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                       >
                         適用
                       </button>

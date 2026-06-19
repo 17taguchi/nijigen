@@ -98,8 +98,8 @@ export default function LoginPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">二次元コード管理ツール</h1>
-          <p className="text-lg text-blue-600 font-medium mt-2">チラシ配布の効果を、数字で見える化</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">二次元コード管理ツール</h1>
+          <p className="text-base sm:text-lg text-blue-600 font-medium mt-2">チラシ配布の効果を、数字で見える化</p>
           <p className="text-gray-500 text-sm mt-2">URLを二次元コードに変換して配布するだけ。読み込み状況をリアルタイムで把握できます。</p>
         </div>
 

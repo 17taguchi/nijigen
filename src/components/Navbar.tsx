@@ -50,7 +50,7 @@ export default function Navbar() {
           <nav className="flex items-center gap-1">
             <Link
               href="/"
-              className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+              className={`hidden sm:block px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                 pathname === '/'
                   ? 'bg-blue-50 text-blue-700'
                   : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
@@ -60,9 +60,10 @@ export default function Navbar() {
             </Link>
             <Link
               href="/codes/new"
-              className="ml-1 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
+              className="ml-1 px-3 sm:px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
-              + 新規作成
+              <span className="hidden sm:inline">+ 新規作成</span>
+              <span className="sm:hidden">+新規</span>
             </Link>
             <Link
               href="/notifications"
