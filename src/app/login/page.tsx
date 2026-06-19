@@ -190,6 +190,14 @@ export default function LoginPage() {
               {tab === 'login' ? 'ログイン' : 'アカウントを作成'}
             </button>
           </form>
+
+          {tab === 'login' && (
+            <p className="text-center text-sm text-gray-500 mt-3">
+              <Link href="/reset-password" className="text-blue-600 hover:underline">
+                パスワードをお忘れの方
+              </Link>
+            </p>
+          )}
         </div>
 
         {/* 特徴 */}
