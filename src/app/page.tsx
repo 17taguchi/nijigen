@@ -224,7 +224,7 @@ export default function DashboardPage() {
                 const isEditing = editingRowId === code.id
                 return (
                 <div key={code.id}>
-                  <div className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-start gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
                     <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
                       <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
@@ -242,7 +242,7 @@ export default function DashboardPage() {
                       {code.memo && <p className="text-sm text-gray-400 truncate">{code.memo}</p>}
                       <p className="hidden sm:block text-xs text-gray-400 mt-0.5 truncate">{getShortUrl(code.short_code)}</p>
                     </div>
-                    <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <div className="flex flex-col items-center gap-1 flex-shrink-0 w-12">
                       <button
                         onClick={() => handleToggleNotification(code.id, code.notification_enabled)}
                         disabled={togglingId === code.id}
@@ -259,16 +259,14 @@ export default function DashboardPage() {
                       </button>
                       <span className="text-[10px] text-gray-400">通知</span>
                     </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="text-2xl font-bold text-blue-600">{scanCount}</p>
+                    <div className="text-right flex-shrink-0 w-20">
+                      <p className="text-2xl font-bold text-blue-600 leading-tight">{scanCount}</p>
                       <p className="text-xs text-gray-400">読み込み</p>
-                      {code.cost != null && (
-                        <p className="text-xs text-gray-400 mt-0.5">
-                          {scanCount > 0 ? `単価¥${Math.round(code.cost / scanCount).toLocaleString()}` : '単価—'}
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-400 mt-0.5 h-4">
+                        {code.cost != null && (scanCount > 0 ? `単価¥${Math.round(code.cost / scanCount).toLocaleString()}` : '単価—')}
+                      </p>
                     </div>
-                    <div className="hidden sm:block text-right flex-shrink-0 text-xs text-gray-400">
+                    <div className="hidden sm:block text-right flex-shrink-0 text-xs text-gray-400 w-24">
                       <p>{formatDate(code.created_at)}</p>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
