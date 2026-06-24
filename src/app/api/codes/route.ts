@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await req.json()
-  const { name, memo, original_url, notification_enabled, notification_email } = body
+  const { name, memo, original_url, notification_enabled, notification_email, cost } = body
 
   if (!name || !original_url) {
     return NextResponse.json({ error: 'name と original_url は必須です' }, { status: 400 })
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('codes')
-    .insert({ name, memo, original_url, short_code, notification_enabled, notification_email, user_id: user.id })
+    .insert({ name, memo, original_url, short_code, notification_enabled, notification_email, cost, user_id: user.id })
     .select()
     .single()
 

@@ -50,7 +50,7 @@ export default function CodeDetailPage() {
   const [scans, setScans] = useState<Scan[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', memo: '' })
+  const [editForm, setEditForm] = useState({ name: '', memo: '', cost: '' })
   const [saving, setSaving] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
@@ -177,7 +177,7 @@ export default function CodeDetailPage() {
       const scansData: Scan[] = await scansRes.json()
       setCode(codeData)
       setScans(scansData)
-      setEditForm({ name: codeData.name, memo: codeData.memo ?? '' })
+      setEditForm({ name: codeData.name, memo: codeData.memo ?? '', cost: codeData.cost?.toString() ?? '' })
       setLoading(false)
       setTimeout(() => generateQR(getShortUrl(codeData.short_code), '#000000'), 100)
     }
@@ -195,7 +195,11 @@ export default function CodeDetailPage() {
     const res = await fetch(`/api/codes/${code.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(editForm),
+      body: JSON.stringify({
+        name: editForm.name,
+        memo: editForm.memo,
+        cost: editForm.cost.trim() === '' ? null : Number(editForm.cost),
+      }),
     })
     if (res.ok) {
       const updated: Code = await res.json()
@@ -355,6 +359,17 @@ export default function CodeDetailPage() {
                     <p className="opacity-70">比較期間</p>
                     <p className="font-semibold">{cmpScans.length}回</p>
                   </div>
+                </div>
+              )}
+              {code.cost != null && (
+                <div className="mt-3 pt-3 border-t border-blue-500 text-sm">
+                  <p className="opacity-70">読み込み単価（選択期間）</p>
+                  <p className="font-semibold">
+                    {mainScans.length > 0
+                      ? `¥${Math.round(code.cost / mainScans.length).toLocaleString()} / 件`
+                      : '読み込みなし'}
+                  </p>
+                  <p className="opacity-60 text-xs mt-0.5">投資額 ¥{code.cost.toLocaleString()}</p>
                 </div>
               )}
             </div>
@@ -578,6 +593,25 @@ export default function CodeDetailPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">遷移先URL</label>
                     <p className="text-sm text-blue-700 break-all">{code.original_url}</p>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      投資額 <span className="text-gray-400 font-normal">（任意・円）</span>
+                    </label>
+                    {editing ? (
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={editForm.cost}
+                        onChange={(e) => setEditForm({ ...editForm, cost: e.target.value })}
+                        placeholder="例：30000"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900">{code.cost != null ? `¥${code.cost.toLocaleString()}` : '—'}</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="px-6 py-4 flex items-center justify-between">
@@ -585,12 +619,12 @@ export default function CodeDetailPage() {
                     onClick={() => setEditing(true)}
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    名前・メモを編集
+                    名前・メモ・投資額を編集
                   </button>
                   {editing && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '' }) }}
+                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '', cost: code.cost?.toString() ?? '' }) }}
                         className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                       >
                         キャンセル

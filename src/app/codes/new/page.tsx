@@ -6,7 +6,7 @@ import Navbar from '@/components/Navbar'
 
 export default function NewCodePage() {
   const router = useRouter()
-  const [form, setForm] = useState({ name: '', memo: '', original_url: '' })
+  const [form, setForm] = useState({ name: '', memo: '', original_url: '', cost: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
 
@@ -36,7 +36,10 @@ export default function NewCodePage() {
     const res = await fetch('/api/codes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
+      body: JSON.stringify({
+        ...form,
+        cost: form.cost.trim() === '' ? null : Number(form.cost),
+      }),
     })
     if (res.ok) {
       const data = await res.json()
@@ -99,6 +102,22 @@ export default function NewCodePage() {
               />
               {errors.original_url && <p className="text-xs text-red-500 mt-1">{errors.original_url}</p>}
               <p className="text-xs text-gray-400 mt-1">二次元コードを読み込んだ際に遷移するURLです</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                投資額 <span className="text-gray-400 font-normal">（任意・円）</span>
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={form.cost}
+                onChange={(e) => setForm({ ...form, cost: e.target.value })}
+                placeholder="例：30000"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+              />
+              <p className="text-xs text-gray-400 mt-1">設定すると、読み込み単価（投資額 ÷ 読み込み数）をアナリティクスで確認できます</p>
             </div>
           </div>
 

@@ -10,6 +10,7 @@ export type Database = {
           short_code: string
           notification_enabled: boolean
           notification_email: string | null
+          cost: number | null
           user_id: string
           created_at: string
           updated_at: string
@@ -22,6 +23,7 @@ export type Database = {
           short_code: string
           notification_enabled?: boolean
           notification_email?: string | null
+          cost?: number | null
           user_id: string
           created_at?: string
           updated_at?: string
@@ -34,6 +36,7 @@ export type Database = {
           short_code?: string
           notification_enabled?: boolean
           notification_email?: string | null
+          cost?: number | null
           user_id?: string
           updated_at?: string
         }
