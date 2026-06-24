@@ -656,6 +656,10 @@ export default function CodeDetailPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       メール通知の宛先 <span className="text-gray-400 font-normal">（任意）</span>
                     </label>
+                    <div className="mb-2 px-3 py-2 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700 space-y-1">
+                      <p>・通知はダッシュボードのトグルでON/OFFを切り替えます（この設定タブでは宛先のみ変更できます）</p>
+                      <p>・読み込みがあった日のみ、毎日18時に1日分をまとめて1通送信します（即時通知ではありません）</p>
+                    </div>
                     {editing ? (
                       <>
                         <input

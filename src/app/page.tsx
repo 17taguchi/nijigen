@@ -135,7 +135,12 @@ export default function DashboardPage() {
         {/* コード一覧 */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-2 flex-wrap">
-            <h2 className="font-semibold text-gray-900">二次元コード一覧</h2>
+            <div>
+              <h2 className="font-semibold text-gray-900">二次元コード一覧</h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                メール通知をONにしたコードは、読み込みがあった日のみ毎日18時にまとめて1通届きます（即時通知ではありません）。
+              </p>
+            </div>
             {!loading && codes.length > 0 && (
               <div className="flex items-center gap-2">
                 <span className="text-xs text-gray-400">メール通知</span>
