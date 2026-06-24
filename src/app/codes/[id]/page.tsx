@@ -54,6 +54,7 @@ export default function CodeDetailPage() {
   const [editForm, setEditForm] = useState({ name: '', memo: '', cost: '', category: '', notification_email: '' })
   const [accountEmail, setAccountEmail] = useState('')
   const [saving, setSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
   const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
   const [chartType, setChartType] = useState<ChartType>('daily')
@@ -216,6 +217,10 @@ export default function CodeDetailPage() {
       const updated: Code = await res.json()
       setCode(updated)
       setEditing(false)
+      setSaveError('')
+    } else {
+      const { error } = await res.json().catch(() => ({ error: '保存に失敗しました' }))
+      setSaveError(error ?? '保存に失敗しました')
     }
     setSaving(false)
   }
@@ -571,6 +576,12 @@ export default function CodeDetailPage() {
               <div className="bg-white rounded-xl border border-gray-200 shadow-sm divide-y divide-gray-100">
                 <div className="p-6 space-y-5">
                   <h2 className="font-semibold text-gray-900">コード設定</h2>
+
+                  {saveError && (
+                    <div className="px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">
+                      保存に失敗しました：{saveError}
+                    </div>
+                  )}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">コード名</label>
