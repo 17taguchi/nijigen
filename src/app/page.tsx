@@ -310,6 +310,7 @@ export default function DashboardPage() {
                           <label className="block text-xs font-medium text-gray-500 mb-1">カテゴリ</label>
                           <input
                             type="text"
+                            list="dashboard-category-options"
                             value={rowForm.category}
                             onChange={(e) => setRowForm({ ...rowForm, category: e.target.value })}
                             placeholder="例：チラシ、SNS"
@@ -365,6 +366,12 @@ export default function DashboardPage() {
             </div>
           )}
         </div>
+
+        <datalist id="dashboard-category-options">
+          {Array.from(new Set(codes.map((c) => c.category).filter(Boolean))).map((cat) => (
+            <option key={cat} value={cat as string} />
+          ))}
+        </datalist>
       </main>
     </div>
   )
