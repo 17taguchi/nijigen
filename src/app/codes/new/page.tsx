@@ -148,7 +148,9 @@ export default function NewCodePage() {
                 placeholder="例：30000"
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
               />
-              <p className="text-xs text-gray-400 mt-1">設定すると、読み込み単価（投資額 ÷ 読み込み数）をアナリティクスで確認できます</p>
+              <p className="text-xs text-gray-400 mt-1">
+                設定すると、読み込み単価（投資額 ÷ 読み込み数）をアナリティクスで確認できます。これはご自身の記録用の金額で、当社へのお支払いとは関係ありません。
+              </p>
             </div>
           </div>
 

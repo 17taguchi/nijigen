@@ -341,6 +341,9 @@ export default function DashboardPage() {
                         </div>
                       </div>
                       <p className="text-xs text-gray-400 mt-2">
+                        投資額はチラシ印刷代や配布費などご自身で管理するための金額です。当社へのお支払いとは関係なく、入力しても課金は発生しません。
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
                         通知先未設定の場合はアカウントのメールアドレス（{accountEmail}）に届きます。複数指定はカンマ区切り。
                       </p>
                       <div className="flex justify-end gap-2 mt-3">

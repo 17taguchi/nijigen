@@ -637,6 +637,9 @@ export default function CodeDetailPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       投資額 <span className="text-gray-400 font-normal">（任意・円）</span>
                     </label>
+                    <p className="text-xs text-gray-400 mb-1.5">
+                      チラシ印刷代や配布費など、ご自身で管理するための金額です。当社へのお支払いとは関係なく、入力しても課金は発生しません。
+                    </p>
                     {editing ? (
                       <input
                         type="number"
