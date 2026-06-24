@@ -50,7 +50,7 @@ export default function CodeDetailPage() {
   const [scans, setScans] = useState<Scan[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', memo: '', cost: '' })
+  const [editForm, setEditForm] = useState({ name: '', memo: '', cost: '', category: '' })
   const [saving, setSaving] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
@@ -177,7 +177,7 @@ export default function CodeDetailPage() {
       const scansData: Scan[] = await scansRes.json()
       setCode(codeData)
       setScans(scansData)
-      setEditForm({ name: codeData.name, memo: codeData.memo ?? '', cost: codeData.cost?.toString() ?? '' })
+      setEditForm({ name: codeData.name, memo: codeData.memo ?? '', cost: codeData.cost?.toString() ?? '', category: codeData.category ?? '' })
       setLoading(false)
       setTimeout(() => generateQR(getShortUrl(codeData.short_code), '#000000'), 100)
     }
@@ -199,6 +199,7 @@ export default function CodeDetailPage() {
         name: editForm.name,
         memo: editForm.memo,
         cost: editForm.cost.trim() === '' ? null : Number(editForm.cost),
+        category: editForm.category.trim() === '' ? null : editForm.category.trim(),
       }),
     })
     if (res.ok) {
@@ -596,6 +597,23 @@ export default function CodeDetailPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
+                      カテゴリ <span className="text-gray-400 font-normal">（任意）</span>
+                    </label>
+                    {editing ? (
+                      <input
+                        type="text"
+                        value={editForm.category}
+                        onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                        placeholder="例：チラシ、SNS、看板"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-900">{code.category || '未分類'}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
                       投資額 <span className="text-gray-400 font-normal">（任意・円）</span>
                     </label>
                     {editing ? (
@@ -619,12 +637,12 @@ export default function CodeDetailPage() {
                     onClick={() => setEditing(true)}
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    名前・メモ・投資額を編集
+                    名前・メモ・カテゴリ・投資額を編集
                   </button>
                   {editing && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '', cost: code.cost?.toString() ?? '' }) }}
+                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '', cost: code.cost?.toString() ?? '', category: code.category ?? '' }) }}
                         className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                       >
                         キャンセル

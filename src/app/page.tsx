@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [scanCounts, setScanCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   useEffect(() => {
     fetchCodes()
@@ -65,6 +66,44 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* カテゴリフィルター */}
+        {!loading && codes.length > 0 && (() => {
+          const categories = Array.from(new Set(codes.map((c) => c.category).filter(Boolean))) as string[]
+          if (categories.length === 0) return null
+          return (
+            <div className="flex gap-2 flex-wrap mb-4">
+              <button
+                onClick={() => setSelectedCategory('all')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                  selectedCategory === 'all'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                すべて
+                <span className="ml-1.5 text-xs opacity-80">({codes.length})</span>
+              </button>
+              {categories.map((cat) => {
+                const count = codes.filter((c) => c.category === cat).length
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                      selectedCategory === cat
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {cat}
+                    <span className="ml-1.5 text-xs opacity-80">({count})</span>
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })()}
+
         {/* コード一覧 */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -92,7 +131,9 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {codes.map((code) => (
+              {codes
+                .filter((code) => selectedCategory === 'all' || code.category === selectedCategory)
+                .map((code) => (
                 <div key={code.id} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
                   <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
                     <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -102,6 +143,11 @@ export default function DashboardPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium text-gray-900 truncate">{code.name}</p>
+                      {code.category && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                          {code.category}
+                        </span>
+                      )}
                       {code.notification_enabled && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 border border-green-200">
                           通知ON

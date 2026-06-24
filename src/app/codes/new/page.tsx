@@ -1,14 +1,25 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
+import { Code } from '@/lib/supabase/types'
 
 export default function NewCodePage() {
   const router = useRouter()
-  const [form, setForm] = useState({ name: '', memo: '', original_url: '', cost: '' })
+  const [form, setForm] = useState({ name: '', memo: '', original_url: '', cost: '', category: '' })
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
+  const [existingCategories, setExistingCategories] = useState<string[]>([])
+
+  useEffect(() => {
+    fetch('/api/codes')
+      .then((r) => r.json())
+      .then((codes: Code[]) => {
+        const categories = Array.from(new Set(codes.map((c) => c.category).filter(Boolean))) as string[]
+        setExistingCategories(categories)
+      })
+  }, [])
 
   function validate() {
     const errs: Record<string, string> = {}
@@ -39,6 +50,7 @@ export default function NewCodePage() {
       body: JSON.stringify({
         ...form,
         cost: form.cost.trim() === '' ? null : Number(form.cost),
+        category: form.category.trim() === '' ? null : form.category.trim(),
       }),
     })
     if (res.ok) {
@@ -74,6 +86,25 @@ export default function NewCodePage() {
                 }`}
               />
               {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                カテゴリ <span className="text-gray-400 font-normal">（任意）</span>
+              </label>
+              <input
+                type="text"
+                list="category-options"
+                value={form.category}
+                onChange={(e) => setForm({ ...form, category: e.target.value })}
+                placeholder="例：チラシ、SNS、看板"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500 transition-shadow"
+              />
+              <datalist id="category-options">
+                {existingCategories.map((c) => (
+                  <option key={c} value={c} />
+                ))}
+              </datalist>
             </div>
 
             <div>

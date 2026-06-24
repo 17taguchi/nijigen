@@ -11,6 +11,7 @@ export type Database = {
           notification_enabled: boolean
           notification_email: string | null
           cost: number | null
+          category: string | null
           user_id: string
           created_at: string
           updated_at: string
@@ -24,6 +25,7 @@ export type Database = {
           notification_enabled?: boolean
           notification_email?: string | null
           cost?: number | null
+          category?: string | null
           user_id: string
           created_at?: string
           updated_at?: string
@@ -37,6 +39,7 @@ export type Database = {
           notification_enabled?: boolean
           notification_email?: string | null
           cost?: number | null
+          category?: string | null
           user_id?: string
           updated_at?: string
         }
