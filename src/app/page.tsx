@@ -12,6 +12,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
   const [deleting, setDeleting] = useState<string | null>(null)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [togglingId, setTogglingId] = useState<string | null>(null)
+  const [bulkToggling, setBulkToggling] = useState(false)
 
   useEffect(() => {
     fetchCodes()
@@ -46,6 +48,32 @@ export default function DashboardPage() {
       setCodes((prev) => prev.filter((c) => c.id !== id))
     }
     setDeleting(null)
+  }
+
+  async function handleToggleNotification(id: string, current: boolean) {
+    setTogglingId(id)
+    const res = await fetch(`/api/codes/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notification_enabled: !current }),
+    })
+    if (res.ok) {
+      setCodes((prev) => prev.map((c) => (c.id === id ? { ...c, notification_enabled: !current } : c)))
+    }
+    setTogglingId(null)
+  }
+
+  async function handleBulkToggle(enabled: boolean) {
+    setBulkToggling(true)
+    const res = await fetch('/api/codes/bulk-notify', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled }),
+    })
+    if (res.ok) {
+      setCodes((prev) => prev.map((c) => ({ ...c, notification_enabled: enabled })))
+    }
+    setBulkToggling(false)
   }
 
   return (
@@ -106,8 +134,27 @@ export default function DashboardPage() {
 
         {/* コード一覧 */}
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between gap-2 flex-wrap">
             <h2 className="font-semibold text-gray-900">二次元コード一覧</h2>
+            {!loading && codes.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">メール通知</span>
+                <button
+                  onClick={() => handleBulkToggle(true)}
+                  disabled={bulkToggling}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60 transition-colors"
+                >
+                  全てON
+                </button>
+                <button
+                  onClick={() => handleBulkToggle(false)}
+                  disabled={bulkToggling}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-60 transition-colors"
+                >
+                  全てOFF
+                </button>
+              </div>
+            )}
           </div>
 
           {loading ? (
@@ -148,14 +195,26 @@ export default function DashboardPage() {
                           {code.category}
                         </span>
                       )}
-                      {code.notification_enabled && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-green-50 text-green-700 border border-green-200">
-                          通知ON
-                        </span>
-                      )}
                     </div>
                     {code.memo && <p className="text-sm text-gray-400 truncate">{code.memo}</p>}
                     <p className="hidden sm:block text-xs text-gray-400 mt-0.5 truncate">{getShortUrl(code.short_code)}</p>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={() => handleToggleNotification(code.id, code.notification_enabled)}
+                      disabled={togglingId === code.id}
+                      title={code.notification_enabled ? 'メール通知ON' : 'メール通知OFF'}
+                      className={`relative w-10 h-6 rounded-full transition-colors disabled:opacity-60 ${
+                        code.notification_enabled ? 'bg-blue-600' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span
+                        className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                          code.notification_enabled ? 'translate-x-4' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span className="text-[10px] text-gray-400">通知</span>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="text-2xl font-bold text-blue-600">{scanCounts[code.id] ?? 0}</p>

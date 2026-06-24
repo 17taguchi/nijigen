@@ -17,6 +17,7 @@ import { ja } from 'date-fns/locale'
 import Navbar from '@/components/Navbar'
 import { Code, Scan } from '@/lib/supabase/types'
 import { getShortUrl, formatDateTime } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/browser'
 
 const PRESET_COLORS = [
   { label: '黒', value: '#000000' },
@@ -50,7 +51,8 @@ export default function CodeDetailPage() {
   const [scans, setScans] = useState<Scan[]>([])
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
-  const [editForm, setEditForm] = useState({ name: '', memo: '', cost: '', category: '' })
+  const [editForm, setEditForm] = useState({ name: '', memo: '', cost: '', category: '', notification_email: '' })
+  const [accountEmail, setAccountEmail] = useState('')
   const [saving, setSaving] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
   const [activeTab, setActiveTab] = useState<'analytics' | 'settings'>('analytics')
@@ -177,11 +179,18 @@ export default function CodeDetailPage() {
       const scansData: Scan[] = await scansRes.json()
       setCode(codeData)
       setScans(scansData)
-      setEditForm({ name: codeData.name, memo: codeData.memo ?? '', cost: codeData.cost?.toString() ?? '', category: codeData.category ?? '' })
+      setEditForm({
+        name: codeData.name,
+        memo: codeData.memo ?? '',
+        cost: codeData.cost?.toString() ?? '',
+        category: codeData.category ?? '',
+        notification_email: codeData.notification_email ?? '',
+      })
       setLoading(false)
       setTimeout(() => generateQR(getShortUrl(codeData.short_code), '#000000'), 100)
     }
     load()
+    createClient().auth.getUser().then(({ data }) => setAccountEmail(data.user?.email ?? ''))
   }, [id, router, generateQR])
 
   useEffect(() => {
@@ -200,6 +209,7 @@ export default function CodeDetailPage() {
         memo: editForm.memo,
         cost: editForm.cost.trim() === '' ? null : Number(editForm.cost),
         category: editForm.category.trim() === '' ? null : editForm.category.trim(),
+        notification_email: editForm.notification_email.trim() === '' ? null : editForm.notification_email.trim(),
       }),
     })
     if (res.ok) {
@@ -630,6 +640,28 @@ export default function CodeDetailPage() {
                       <p className="text-sm text-gray-900">{code.cost != null ? `¥${code.cost.toLocaleString()}` : '—'}</p>
                     )}
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      メール通知の宛先 <span className="text-gray-400 font-normal">（任意）</span>
+                    </label>
+                    {editing ? (
+                      <>
+                        <input
+                          type="text"
+                          value={editForm.notification_email}
+                          onChange={(e) => setEditForm({ ...editForm, notification_email: e.target.value })}
+                          placeholder={accountEmail || 'example@email.com'}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">
+                          未設定の場合はアカウントのメールアドレス（{accountEmail}）に届きます。複数指定する場合はカンマで区切ってください。
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-sm text-gray-900">{code.notification_email || `${accountEmail}（デフォルト）`}</p>
+                    )}
+                  </div>
                 </div>
 
                 <div className="px-6 py-4 flex items-center justify-between">
@@ -637,12 +669,12 @@ export default function CodeDetailPage() {
                     onClick={() => setEditing(true)}
                     className="text-sm text-blue-600 hover:underline"
                   >
-                    名前・メモ・カテゴリ・投資額を編集
+                    名前・メモ・カテゴリ・投資額・通知先を編集
                   </button>
                   {editing && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '', cost: code.cost?.toString() ?? '', category: code.category ?? '' }) }}
+                        onClick={() => { setEditing(false); setEditForm({ name: code.name, memo: code.memo ?? '', cost: code.cost?.toString() ?? '', category: code.category ?? '', notification_email: code.notification_email ?? '' }) }}
                         className="px-3 py-1.5 text-sm text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
                       >
                         キャンセル
