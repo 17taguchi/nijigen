@@ -224,82 +224,89 @@ export default function DashboardPage() {
                 const isEditing = editingRowId === code.id
                 return (
                 <div key={code.id}>
-                  <div className="flex items-start gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
-                    <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
-                      </svg>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium text-gray-900 truncate">{code.name}</p>
-                        {code.category && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700 border border-blue-200">
-                            {code.category}
-                          </span>
-                        )}
+                  <div className="flex flex-wrap sm:flex-nowrap items-start gap-3 sm:gap-4 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors">
+                    {/* アイコン＋名前ブロック（モバイルは常に全幅で1行目） */}
+                    <div className="flex items-start gap-3 min-w-0 basis-full sm:basis-0 sm:flex-1">
+                      <div className="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                        </svg>
                       </div>
-                      {code.memo && <p className="text-sm text-gray-400 truncate">{code.memo}</p>}
-                      <p className="hidden sm:block text-xs text-gray-400 mt-0.5 truncate">{getShortUrl(code.short_code)}</p>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-medium text-gray-900 truncate">{code.name}</p>
+                          {code.category && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-blue-50 text-blue-700 border border-blue-200">
+                              {code.category}
+                            </span>
+                          )}
+                        </div>
+                        {code.memo && <p className="text-sm text-gray-400 truncate">{code.memo}</p>}
+                        <p className="hidden sm:block text-xs text-gray-400 mt-0.5 truncate">{getShortUrl(code.short_code)}</p>
+                      </div>
                     </div>
-                    <div className="flex flex-col items-center gap-1 flex-shrink-0 w-12">
-                      <button
-                        onClick={() => handleToggleNotification(code.id, code.notification_enabled)}
-                        disabled={togglingId === code.id}
-                        title={code.notification_enabled ? 'メール通知ON' : 'メール通知OFF'}
-                        className={`relative w-10 h-6 rounded-full transition-colors disabled:opacity-60 ${
-                          code.notification_enabled ? 'bg-blue-600' : 'bg-gray-200'
-                        }`}
-                      >
-                        <span
-                          className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
-                            code.notification_enabled ? 'translate-x-4' : 'translate-x-0'
+
+                    {/* メタ情報＋操作ブロック（モバイルは2行目に折り返し） */}
+                    <div className="flex items-center gap-3 sm:gap-4 flex-wrap basis-full sm:basis-0 sm:w-auto justify-between sm:justify-end">
+                      <div className="flex flex-col items-center gap-1 flex-shrink-0 w-12">
+                        <button
+                          onClick={() => handleToggleNotification(code.id, code.notification_enabled)}
+                          disabled={togglingId === code.id}
+                          title={code.notification_enabled ? 'メール通知ON' : 'メール通知OFF'}
+                          className={`relative w-10 h-6 rounded-full transition-colors disabled:opacity-60 ${
+                            code.notification_enabled ? 'bg-blue-600' : 'bg-gray-200'
                           }`}
-                        />
-                      </button>
-                      <span className="text-[10px] text-gray-400">通知</span>
-                    </div>
-                    <div className="text-right flex-shrink-0 w-20">
-                      <p className="text-2xl font-bold text-blue-600 leading-tight">{scanCount}</p>
-                      <p className="text-xs text-gray-400">読み込み</p>
-                      <p className="text-xs text-gray-400 mt-0.5 h-4">
-                        {code.cost != null && (scanCount > 0 ? `単価¥${Math.round(code.cost / scanCount).toLocaleString()}` : '単価—')}
-                      </p>
-                    </div>
-                    <div className="hidden sm:block text-right flex-shrink-0 text-xs text-gray-400 w-24">
-                      <p>{formatDate(code.created_at)}</p>
-                    </div>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button
-                        onClick={() => (isEditing ? setEditingRowId(null) : startRowEdit(code))}
-                        className={`p-2 rounded-lg transition-colors ${
-                          isEditing ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
-                        }`}
-                        title="カテゴリ・投資額・通知先を編集"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <Link
-                        href={`/codes/${code.id}`}
-                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                        title="アナリティクス"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(code.id)}
-                        disabled={deleting === code.id}
-                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                        title="削除"
-                      >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                        >
+                          <span
+                            className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${
+                              code.notification_enabled ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <span className="text-[10px] text-gray-400">通知</span>
+                      </div>
+                      <div className="text-right flex-shrink-0 w-20">
+                        <p className="text-2xl font-bold text-blue-600 leading-tight">{scanCount}</p>
+                        <p className="text-xs text-gray-400">読み込み</p>
+                        <p className="text-xs text-gray-400 mt-0.5 h-4">
+                          {code.cost != null && (scanCount > 0 ? `単価¥${Math.round(code.cost / scanCount).toLocaleString()}` : '単価—')}
+                        </p>
+                      </div>
+                      <div className="hidden sm:block text-right flex-shrink-0 text-xs text-gray-400 w-24">
+                        <p>{formatDate(code.created_at)}</p>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button
+                          onClick={() => (isEditing ? setEditingRowId(null) : startRowEdit(code))}
+                          className={`p-2 rounded-lg transition-colors ${
+                            isEditing ? 'text-blue-600 bg-blue-50' : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                          }`}
+                          title="カテゴリ・投資額・通知先を編集"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <Link
+                          href={`/codes/${code.id}`}
+                          className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="アナリティクス"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                          </svg>
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(code.id)}
+                          disabled={deleting === code.id}
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                          title="削除"
+                        >
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
                     </div>
                   </div>
 

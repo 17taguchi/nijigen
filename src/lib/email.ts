@@ -12,7 +12,7 @@ export function buildDailyDigestHtml({ scans, codeStats }: DigestParams) {
     <tr>
       <td style="padding: 6px 8px; border-bottom: 1px solid #f0f0f0;">${s.codeName}</td>
       <td style="padding: 6px 8px; border-bottom: 1px solid #f0f0f0; color: #6b7280;">${s.area}</td>
-      <td style="padding: 6px 8px; border-bottom: 1px solid #f0f0f0; color: #6b7280;">${new Date(s.scannedAt).toLocaleString('ja-JP')}</td>
+      <td style="padding: 6px 8px; border-bottom: 1px solid #f0f0f0; color: #6b7280;">${new Date(s.scannedAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' })}</td>
     </tr>`
     )
     .join('')
